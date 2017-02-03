@@ -11,4 +11,30 @@ var User = new Schema({
 
 var Users = mongoose.model('User', User);
 
+router.post('/login', function(req, res) {
+  User.findOne({
+    name: req.body.name
+  }, function(err, user) {
+    if (err) {
+      throw err;
+    }
+    if (!user) {
+      res.json({ success: false, message: 'Authentication failed. User not found.' });
+    } else if (user) {
+      if (user.password != req.body.password) {
+        res.json({ success: false, message: 'Authentication failed. Wrong password.' });
+      } else {
+        var token = jwt.sign(user, app.get('superSecret'), {
+          expiresInMinutes: 1440 // expires in 24 hours
+        });
+        res.json({
+          success: true,
+          message: 'Created token',
+          token: token
+        });
+      }   
+    }
+  });
+});
+
 module.exports = router;
